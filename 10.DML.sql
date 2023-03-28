@@ -93,6 +93,65 @@ select profno, name from professor
 select * from prof_3;
 select * from prof_4;
 
+/* B. update
+
+	1. 테이블에 있는 데이터를 수정하기 위해서 사용되는 명령
+	2. 기존의 행 or 열을 수정하기 위해서 사용
+	3. 주의할 점 where 조건절에 특정의 조건을 정의하지 않을 경우 전체 데이터가 수정이 된다.
+	4. 문법
+		  
+			update 테이블명
+			   set 컬럼 = 값
+			 where 조건절
+*/
+drop table emp999;
+create table emp999 as select * from emp;
+select * from emp999;
+
+-- update 주의할 점
+update emp999
+   set ename = '스미스';
+
+-- 1. 전체 사원의 부서번호를 10, 급여를 0으로 수정하기
+update emp999
+   set deptno = 10, 
+	     sal = 0;
+
+select * from emp999;
+
+drop table emp999;
+create table emp999 as select * from emp;
+select * from emp999;
+
+-- 실습1. 전체 사원의 급여를 10% 인상하기
+select sal * 1.1 "10% 인상급여" from emp999;
+select * from emp999;
+
+-- 실습2. 모든 사원의 입사일을 현재일로 수정하기(sysdate)
+
+-- professor4로 테이블을 생성한 후에 
+-- 실습3. professor에서 직급이 assistant professor인 사람의 보너스를 200으로 인상하기
+-- 실습4. professor에서 Sharon Stone과 직급이 동일한 교수들의 급열르 15%인상하기
+-- hint) 서브쿼리를 이용 where절에 서브쿼리를 지정  
+--  where position = (select from profeessor where name 샤론스톤의 position)   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
