@@ -178,5 +178,3 @@ select * from c_test2;
 
 
 
-
-

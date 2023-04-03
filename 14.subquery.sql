@@ -81,16 +81,199 @@ select first_name || '.' || last_name 사원명
 		     where emp.department_id = dpt.department_id) 부서이름
   from hr.employees emp;
 
+-- 실습3. hr계정 사원테이블에서 평균급(전체사원)보다 작은 사원만 출력
+-- 단일행, 단일컬럼
+select round(avg(salary), 0) from hr.employees emp;
+
+select first_name || '.' || last_name 사원명
+	   , salary
+  from hr.employees emp
+ where salary < (select round(avg(salary), 0) from hr.employees);
+
+/* C. 다중행, 다중열 sub query */
+-- 1. 다중행, 단일행
+-- hr의 locations, jobs에 접근할 수 있도록 권한을 부여
+grant select on hr.locations to scott;
+grant select on hr.jobs to scott;
+
+select * from hr.locations;
+select * from hr.jobs;
+
+-- 실습1. 부서의 state_province가 null인 부서를 조회
+-- 1) locations에서 state_province가 null인 자료 (다중행, 단일컬럼)
+-- 2) deparments를 join해서 
+-- 3) 부서번호, 부서명을 출력
+select location_id from hr.locations where state_province is null;
+select * from hr.departments dpt;
+
+select dpt.department_id
+     , dpt.department_name 
+	from hr.departments dpt
+ where dpt.location_id in (select location_id 
+														 from hr.locations 
+														where state_province is null);
+														
+-- 실습2. 급여가 가장 많은 사원의 이름, 직급을 출력
+-- first_name.last_name, job_title;
+select * from hr.jobs;													
+select * from hr.employees emp;
+select max(salary) from hr.employees emp;
+
+select first_name || '.' || last_name 사원명
+	   , emp.salary
+		 , job.job_title
+  from hr.employees emp
+	   , hr.jobs job
+ where emp.salary = (select max(salary) from hr.employees)
+   and emp.job_id = job.job_id;
+
+select first_name || '.' || last_name 사원명
+	   , emp.salary
+		 , job.job_title
+  from hr.employees emp
+	   , hr.jobs job
+ where emp.salary = (select min(salary) from hr.employees)
+   and emp.job_id = job.job_id;
+	 
+-- 실습4. 급여가 평균급여보다 많은 사원
+-- 미국내에서 근무하는 사원들에 대한 평균급여
+-- 사원명, salary, job_title
+select * from hr.employees;
+select * from hr.departments dpt;
+select * from hr.locations loc where country_id = 'US';
+
+select round(avg(emp.salary))
+  from hr.employees   emp
+	   , hr.locations   loc
+		 , hr.departments dpt
+ where loc.country_id    = 'US'
+   and loc.location_id   = dpt.location_id  
+   and dpt.department_id = emp.department_id;
 
 
+select emp.first_name || '.' || emp.last_name 사원명
+		 , emp.salary
+		 , job.job_title
+  from hr.employees   emp
+	   , hr.jobs        job
+ where emp.job_id = job.job_id
+   and emp.salary > (select round(avg(emp.salary))
+											 from hr.employees   emp
+												  , hr.locations   loc
+												  , hr.departments dpt
+										  where loc.country_id    = 'US'
+											  and loc.location_id   = dpt.location_id  
+											  and dpt.department_id = emp.department_id)
 
 
+-- 2. 다중행, 다중열을 이용한 update처리
+drop table month_salary;
+create table month_salary(
+		magam_date 			date not null /* 마감일 */
+	, department_id 		number        /* 부서번호 */
+	, emp_count     	number        /* 사원수 */
+	, total_salary  	number        /* 급여총액 */
+	, average_salary	number        /* 급여평균 */
+);
+select * from month_salary;
+
+-- 실습1. 부서별 총사원수, 급여총액, 급여평균을 업데이트하기
+
+-- a. 2 step으로 처리
+-- 1) 현재일기준으로 insert(부서별)를 하고, 마감일, 부서번호, 0, 0, 0 
+-- 2) 초기화후에 update(사원수, 급여총액, 급여평균)
+insert into month_salary
+select last_day(sysdate)
+     , emp.department_id
+		 , 0
+		 , 0
+		 , 0
+  from hr.employees emp
+ group by emp.department_id;
+ select * from month_salary;
+
+select emp.department_id
+		 , count(*)
+		 , sum(emp.salary)
+		 , round(avg(emp.salary))
+  from hr.employees emp
+ group by emp.department_id;
+
+update month_salary sal
+   set emp_count      
+					= (select count(*) from hr.employees emp where emp.department_id = sal.department_id)
+     , total_salary   
+					= (select sum(emp.salary) from hr.employees emp where emp.department_id = sal.department_id)
+     , average_salary 
+					= (select round(avg(emp.salary)) from hr.employees emp where emp.department_id = sal.department_id);
+
+ select * from month_salary;
 
 
+-- b. 1 step으로 처리
+delete from month_salary
 
+update month_salary sal
+	 set (emp_count, total_salary, average_salary) 
+					= (select count(*)
+								  , sum(emp.salary)
+								  , round(avg(emp.salary))
+							 from hr.employees emp
+						  where emp.department_id = sal.department_id)
 
+ select * from month_salary;
+ 
+ /* C. 다중행, 다중열 관련 연산자
+ 
+	1. 비교연산자 : in, between, exists
+	2. >any  : 결과중에서 최소값을 반환
+	3. <any  : 결과중에서 최대값을 반환
+	4. >all  : 결과중에서 최대값을 반환
+	5. <all  : 결과중에서 최소값을 반환
+ */
 
+-- 실습1. 미국내에있는 부서 조회
+-- a. 비교연산자
+select dpt.department_name
+  from hr.departments dpt
+	   , hr.locations   loc
+ where loc.country_id  = 'US' 
+	 and loc.location_id = dpt.location_id;
 
+-- b. in연산자
+select dpt.department_name
+  from hr.departments dpt
+ where dpt.location_id in (select location_id from hr.locations loc where loc.country_id  = 'US');
 
+-- c. any, all 연산자
+-- salary가 30부서의 최소급여보다 많은 사원을 조회
+select min(salary) from hr.employees where department_id = 30;
 
+-- 1) 비교연산자
+select emp.first_name || '.' || emp.last_name 사원명
+		 , emp.salary
+  from hr.employees   emp
+ where emp.salary > (select min(salary) from hr.employees where department_id = 30);
 
+-- 2) >any, <all
+select emp.first_name || '.' || emp.last_name 사원명
+		 , emp.salary
+  from hr.employees   emp
+ where emp.salary >any (select salary from hr.employees where department_id = 30);
+
+select emp.first_name || '.' || emp.last_name 사원명
+		 , emp.salary
+  from hr.employees   emp
+ where emp.salary <all (select salary from hr.employees where department_id = 30);
+
+-- salary가 30부서의 최대급여보다 많은 사원을 조회
+-- <any, >all
+select emp.first_name || '.' || emp.last_name 사원명
+		 , emp.salary
+  from hr.employees   emp
+ where emp.salary <any (select salary from hr.employees where department_id = 30);
+
+select emp.first_name || '.' || emp.last_name 사원명
+		 , emp.salary
+  from hr.employees   emp
+ where emp.salary >all (select salary from hr.employees where department_id = 30);

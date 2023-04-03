@@ -162,7 +162,7 @@ select deptno
 		 , round(avg(sal + nvl(comm,0))) 평균급여
   from emp
  group by rollup(deptno, job);
- 
+
 select deptno 
 		 , job
 		 , count(*) 사원수
@@ -325,99 +325,37 @@ select p_code
 --    가장 적은 경우 , 평균 금액을 구하세요. 단 보너스가 없을 경우는 보너스를 0 으로 계산하고 
 --    출력 금액은 모두 소수점 첫째 자리까지만 나오게 하세요
 -- MAX, MIN, AVG
-select max(sal + nvl(comm, 0)) 최대급여 
-     , min(sal + nvl(comm, 0)) 최소급여 
-		 , round(avg(sal + nvl(comm, 0)),2) 평균급여 
-  from emp;
-	
+
 -- 2. student 테이블의 birthday 컬럼을 참조해서 월별로 생일자수를 출력하세요
 -- TOTAL, JAN, ...,  5 DEC
 --  20EA   3EA ....
-select birthday from student;
-select to_char(birthday) from student;
-select to_char(birthday, 'MM') from student;
-select count(to_char(birthday, 'MM')) from student;
-select count(to_char(birthday, 'MM')) || ' 명 전체인원' TOT
-     , count(decode(to_char(birthday, 'MM'), '01', 0)) || ' 명' JAN
-     , count(decode(to_char(birthday, 'MM'), '02', 0)) || ' 명' FEB
-		 , count(decode(to_char(birthday, 'MM'), '03', 0)) || ' 명' MAR			
-		 , count(decode(to_char(birthday, 'MM'), '04', 0)) || ' 명' APR			
-		 , count(decode(to_char(birthday, 'MM'), '05', 0)) || ' 명' MAY			
-		 , count(decode(to_char(birthday, 'MM'), '06', 0)) || ' 명' JUN			
-		 , count(decode(to_char(birthday, 'MM'), '07', 0)) || ' 명' JUL			
-		 , count(decode(to_char(birthday, 'MM'), '08', 0)) || ' 명' AUG			
-		 , count(decode(to_char(birthday, 'MM'), '09', 0)) || ' 명' SEP			
-		 , count(decode(to_char(birthday, 'MM'), '11', 0)) || ' 명' OCT		
-		 , count(decode(to_char(birthday, 'MM'), '11', 0)) || ' 명' NOV			
-		 , count(decode(to_char(birthday, 'MM'), '12', 0)) || ' 명' DEC			
-  from student;
 
 -- 3. Student 테이블의 tel 컬럼을 참고하여 아래와 같이 지역별 인원수를 출력하세요.
 --    단, 02-SEOUL, 031-GYEONGGI, 051-BUSAN, 052-ULSAN, 053-DAEGU, 055-GYEONGNAM
 --    으로 출력하세요
-select count(*) || '명' from student;
-select instr(tel, ')') from student;
-select substr(tel, 1, instr(tel, ')')-1) from student;
-
-select count(*) || '명' tot
-     , count(decode(substr(tel, 1, instr(tel, ')')-1), '02', 0)) as 서울
-		 , count(decode(substr(tel, 1, instr(tel, ')')-1), '031', 0)) as 경기
-		 , count(decode(substr(tel, 1, instr(tel, ')')-1), '051', 0)) as 부산
-		 , count(decode(substr(tel, 1, instr(tel, ')')-1), '052', 0)) as 울산
-		 , count(decode(substr(tel, 1, instr(tel, ')')-1), '053', 0)) as 대구
-		 , count(decode(substr(tel, 1, instr(tel, ')')-1), '055', 0)) as 경남	 
-  from student;
 
 -- 4. emp 테이블을 사용하여 직원들의 급여와 전체 급여의 누적 급여금액을 출력,
 -- 단 급여를 오름차순으로 정렬해서 출력하세요.
 -- sum() over()
-select deptno, ename, sal
-	   , sum(sal) over(order by sal) 누적급여
-  from emp;
+
 
 -- 6. student 테이블의 Tel 컬럼을 사용하여 아래와 같이 지역별 인원수와 전체대비 차지하는 비율을 
 --    출력하세요.(단, 02-SEOUL, 031-GYEONGGI, 051-BUSAN, 052-ULSAN, 053-DAEGU,055-GYEONGNAM)
-select count(*) || '명(' || (count(name) / count(name) * 100) || '%)' total
-     , count(decode(substr(tel, 1, instr(tel, ')')-1), '02', '서울')) || '명(' ||
-				(count(decode(substr(tel, 1, instr(tel, ')')-1), '02', '서울')) / count(name) * 100) || '%)'	서울	 
-     , count(decode(substr(tel, 1, instr(tel, ')')-1), '031', '경기')) || '명(' ||
-				(count(decode(substr(tel, 1, instr(tel, ')')-1), '031', '경기')) / count(name) * 100) || '%)'	경기	 
-     , count(decode(substr(tel, 1, instr(tel, ')')-1), '051', '부산')) || '명(' ||
-				(count(decode(substr(tel, 1, instr(tel, ')')-1), '051', '부산')) / count(name) * 100) || '%)'	부산	 
-     , count(decode(substr(tel, 1, instr(tel, ')')-1), '052', '울산')) || '명(' ||
-				(count(decode(substr(tel, 1, instr(tel, ')')-1), '052', '울산')) / count(name) * 100) || '%)'	울산	 
-     , count(decode(substr(tel, 1, instr(tel, ')')-1), '053', '대구')) || '명(' ||
-				(count(decode(substr(tel, 1, instr(tel, ')')-1), '053', '대구')) / count(name) * 100) || '%)'	대구	 
-     , count(decode(substr(tel, 1, instr(tel, ')')-1), '055', '경남')) || '명(' ||
-				(count(decode(substr(tel, 1, instr(tel, ')')-1), '055', '경남')) / count(name) * 100) || '%)'	경남	 
-  from student;	
-	
-	 
+		 
+
 -- 7. emp 테이블을 사용하여 부서별로 급여 누적 합계가 나오도록 출력하세요. 
 -- ( 단 부서번호로 오름차순 출력하세요. )
-select deptno, ename, sal
-     , sum(sal) over(partition by deptno order by sal) 누적급여
-  from emp;
-
 
 -- 8. emp 테이블을 사용하여 각 사원의 급여액이 전체 직원 급여총액에서 몇 %의 비율을 
 --    차지하는지 출력하세요. 단 급여 비중이 높은 사람이 먼저 출력되도록 하세요
-select deptno, ename, sal
-     , sum(sum(sal)) over() total
-		 , round(ratio_to_report(sum(sal)) over() * 100, 2) "%"
-  from emp
- group by deptno, ename, sal
- order by 5;
 	
 -- 9. emp 테이블을 조회하여 각 직원들의 급여가 해당 부서 합계금액에서 몇 %의 비중을
 --     차지하는지를 출력하세요. 단 부서번호를 기준으로 오름차순으로 출력하세요.
 
-select deptno, ename, sal
-     , sum(sum(sal)) over(partition by deptno order by sal) 부서합계
-		 , round((ratio_to_report(sum(sal)) over(partition by deptno)) * 100, 2) "%"
-  from emp
- group by deptno, ename, sal
- order by 1;
+
+
+
+
 
 
 
