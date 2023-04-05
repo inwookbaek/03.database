@@ -278,7 +278,77 @@ select * from sungresult;
 -- 6. update sungresult rank = 순위를 update
 
 create or replace procedure pro_25 is
+
+	cursor c_sungjuk    is  select * from sungjuk; 
+	cursor c_sungresult is  select hakbun, tot from sungresult;
+
+	v_hakbun  sungjuk.hakbun%type;
+	v_name    sungjuk.name%type;
+	v_kor			sungjuk.kor%type;
+	v_eng			sungjuk.eng%type;
+	v_mat			sungjuk.mat%type;
+	
+	v_tot     sungresult.tot%type;
+	v_avg     sungresult.avg%type;
+	v_hak     sungresult.hak%type;	
+	v_pass    sungresult.pass%type;	
+	v_rank    sungresult.rank%type;		
 begin
+	-- 1. 성적결과초기화
+	delete from sungresult;
+	
+	-- 2. 성적결과를 생성
+	open c_sungjuk;
+	
+	loop
+		fetch c_sungjuk into v_hakbun, v_name, v_kor, v_eng, v_mat;
+		exit when c_sungjuk%notfound;
+		
+		v_tot := v_kor + v_eng + v_mat;
+		v_avg := round(v_tot / 3, 2);
+		
+		if      v_avg >= 95 then v_hak := 'A+';
+			elsif v_avg >= 90 then v_hak := 'A0';
+			elsif v_avg >= 85 then v_hak := 'B+';
+			elsif v_avg >= 80 then v_hak := 'B0';
+			elsif v_avg >= 75 then v_hak := 'C+';		
+			elsif v_avg >= 70 then v_hak := 'C0';		
+			elsif v_avg >= 65 then v_hak := 'D+';
+			elsif v_avg >= 60 then v_hak := 'D0';
+			else                   v_hak := 'F';
+		end if;		
+		
+		if v_avg >= 70
+			then v_pass := 'pass';
+			else v_pass := 'fail';
+		end if;
+		
+		insert into sungresult(hakbun, name, kor, eng, mat, tot, avg, hak, pass)
+		            values(v_hakbun, v_name, v_kor, v_eng, v_mat, v_tot, v_avg, v_hak, v_pass);		
+	end loop;
+	
+	close c_sungjuk;
+	
+	-- 3. 성적별 등수
+	open c_sungresult;
+	
+	loop
+	
+		fetch c_sungresult into v_hakbun, v_tot;
+		exit when c_sungresult%notfound;
+		
+		select count(*) + 1
+		  into v_rank
+		  from sungresult
+		 where tot > v_tot;
+		 
+	  update sungresult
+		   set rank = v_rank
+		 where hakbun = v_hakbun;
+	end loop;
+
+  close c_sungresult;
+
 exception when others then
 		dbms_output.put_line('예외가 발생했습니다!!!');
 	
@@ -286,8 +356,28 @@ end pro_25;
 
 call pro_25();
 
-select count(*) + 1 from sungresult where tot > 180;
+
+select * from sungresult;
+select count(*) + 1 from sungresult where tot > 245;
+
+/* 연습문제 */
+-- ex01) 두 숫자를 제공하면 덧셈을 해서 결과값을 반환하는 함수를 정의
+-- 함수명은 add_num
+
+-- ex02) 부서번호를 입력하면 해당 부서에서 근무하는 사원 수를 반환하는 함수를 정의
+-- 함수명은 get_emp_count
+
+-- ex03) emp에서 사원번호를 입력하면 해당 사원의 관리자 이름을 구하는 함수
+-- 함수명 get_mgr_name
 
 
+-- ex04) emp테이블을 이용해서 사원번호를 입력하면 급여 등급을 구하는 함수
+-- 4000~5000 A, 3000~4000미만 B, 2000~3000미만 C, 1000~200미만 D, 1000미만 F 
+-- 함수명 get_sal_grade
+
+
+-- ex05) star_wars에 episode를 신규추가등록
+-- episode_id = 7, episode_name = '새로운 공화국(New Republic)', open_year=2009
+-- 새로운 에피소드를 추가하는 new_star_wars프로시저를 생성
 
 

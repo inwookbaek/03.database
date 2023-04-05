@@ -75,9 +75,73 @@ select fn_02(32133,321310,1220) from dual;
 -- sql*plus : execute fn_02(10,10,10);
 
 -- 실습3. 현재일을 입력받아서 해당월의 마지막일자를 구하는 함수
-create or replace function fn_03
+create or replace function fn_03(p_date in date) return date as
+	v_result   date;
 begin
+	v_result := add_months(p_date, 1) - to_char(p_date, 'DD');
+	return v_result;
 end fn_03;
+select fn_03(sysdate) from dual;
 
+-- 실습4. '홍길동'문자열을 전달받아서 '길동'만 리턴하는 함수 fn_04
+create or replace function fn_04(p_name in varchar2) return varchar2 is
+	v_result   varchar2(20);
+begin
+	v_result := substr(p_name, 2);
+	return v_result;
+end fn_04;
+select fn_04('홍길동') from dual;
+select ename, fn_04(ename) from emp;
 
+-- 실습5. fn_05: 현재일 입력받아서 '2023년 04월 03일'의 형태로 리턴
+create or replace function fn_05(p_date in date) return varchar2 is
+	v_result   varchar2(30);
+begin
+	v_result := to_char(p_date, 'yyyy"년" MM"월" dd"일"');
+	return v_result;
+end fn_05;
 
+select fn_05(sysdate) from dual;
+select name, fn_05(hiredate) from professor;
+
+-- 실습06. fn_06: jumin번호를 입력받아서 남자 or 여자를 구분하는 리턴 함수
+select * from student;
+create or replace function fn_06(p_ssn in varchar2) return varchar2 is
+	v_result   varchar2(10);
+begin
+	v_result := substr(p_ssn, 7, 1);
+	
+	if v_result in ('1', '3')
+		then v_result := '남자';
+		else v_result := '여자';
+	end if;
+	
+	return v_result;
+end fn_06;
+select fn_06('9511181000000') from dual union all
+select fn_06('9511182000000') from dual union all
+select fn_06('9511183000000') from dual union all
+select fn_06('9511184000000') from dual;
+
+select name, fn_06(jumin), fn_05(birthday) from student;
+
+-- 실습07 fn_07: professor에서 hiredate를 현재일기준으로 근속년월을 계산함수
+-- hint) 근속년 floor(months_between()), 근속월ceil(months_between()) -> 12년 5개월
+create or replace function fn_07(p_hiredate in date) return varchar2 is
+	v_result   varchar2(20);
+begin
+	v_result := floor(months_between(sysdate, p_hiredate) / 12)  || '년 '
+				        || ceil(mod(months_between(sysdate, p_hiredate), 12)) || '개월';
+	return v_result;
+end fn_07;
+
+select sysdate
+		 , months_between(sysdate, '20200101') / 12
+		 , floor(months_between(sysdate, '20200101') / 12) 년
+		 , ceil(mod(months_between(sysdate, '20200101'), 12)) 월
+		 , mod(3, 2)
+  from dual;
+
+select fn_07('20200101') from dual;
+select name, hiredate, fn_07(hiredate) from professor;
+select ename, hiredate, fn_07(hiredate) from emp;
